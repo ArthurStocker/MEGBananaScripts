@@ -126,7 +126,7 @@ function getCalculation(document, userParam, divisor, documentInfo) {
         var row = rows[i];
 
         //calculation.opening = toInvoiceAmountFormat(documentInfo, row.value("Balance"));
-        calculation.balance = toInvoiceAmountFormat(documentInfo, row.value("Balance") * (row.value("BClass") % 2 == 0 ? -1 : 1));
+        calculation.balance = toInvoiceAmountFormat(documentInfo, row.value("Balance") * (row.value("BClass") != '' && row.value("BClass") % 2 == 0 ? -1 : 1));
         calculation.description = row.value("Description");
         calculation.origin_row = row.rowNr;
         calculation.origin_table = "Accounts";
