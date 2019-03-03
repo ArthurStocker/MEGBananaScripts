@@ -117,7 +117,7 @@ function getCalculation(document, userParam, divisor, documentInfo) {
     var rows = table.findRows(
         function(rowObj, rowNr, table) {
             // Return true if ....
-            return (rowObj.value("Gr") === '1-1' ||  rowObj.value("Gr") === 'DEB' || rowObj.value("Gr") === 'ERF' || rowObj.value("Account") === '290') && rowObj.value("Balance") != 0;
+            return (rowObj.value("Gr") === userParam.bank_balance || rowObj.value("Gr") === userParam.customer_balance || rowObj.value("Gr") === userParam.renewalsfund_balance || rowObj.value("Account") === userParam.accruals_balance) && rowObj.value("Balance") != 0;
         }
     );
 
@@ -146,8 +146,8 @@ function getAccounts(document, userParam, divisor, documentInfo) {
     var table = document.table("Accounts");
     var rows = table.findRows(
         function(rowObj, rowNr, table) {
-            // Return true if Gr eq. userParam.costcenter_group
-            return rowObj.value("Gr") === userParam.costcenter_group;
+            // Return true if Gr eq. userParam.renewalsfund_costcenters
+            return rowObj.value("Gr") === userParam.renewalsfund_costcenters;
         }
     );
 
@@ -174,8 +174,8 @@ function getCustomers(document, userParam, documentInfo, supplierInfo, accountNu
     var table = document.table("Accounts");
     var rows = table.findRows(
         function(rowObj, rowNr, table) {
-            // Return true if Gr eq. userParam.costcenter_group
-            return rowObj.value("Gr") === userParam.address_group;
+            // Return true if Gr eq. userParam.customer_accounts
+            return rowObj.value("Gr") === userParam.customer_accounts;
         }
     );
 
@@ -341,7 +341,6 @@ function printReport(jsonData, userParam, report) {
     if (userParam.print_body) {
         titleStart = "115mm";
         docStart = "130mm";
-        userParam.body = "Auf Wunsch und nach Terminabsprache könnt Ihr bei uns Einsicht in die Details der Abschlussrechnung des Vorjahres nehmen.\nAls Vorbereitung auf die Miteigentümer-Versammlung im März überreiche ich Euch die Variante des Budgets.";
         var text = userParam.body.split('\n');
         var body = report.addParagraph("", "body");
         for (var i = 0; i < text.length; i++) {
@@ -406,7 +405,7 @@ function printReport(jsonData, userParam, report) {
             if (className == "note_cell") {
                 row.addCell("", classNameEvenRow + " padding-left padding-right thin-border-top " + className, 1);
             } else {
-                row.addCell("", classNameEvenRow + " padding-right amount " + className, 1);
+                row.addCell(item.balance, classNameEvenRow + " padding-right amount " + className, 1);
                 //toInvoiceAmountFormat(jsonData, item.total_amount_vat_inclusive)
             }
         }
@@ -625,24 +624,62 @@ function convertParam(userParam) {
     convertedParam.data.push(currentParam);
 
     currentParam = {};
-    currentParam.name = 'address_group';
-    currentParam.parentObject = 'address_group';
-    currentParam.title = texts.param_address_group;
+    currentParam.name = 'bank_balance';
+    currentParam.title = texts.param_bank_balance;
     currentParam.type = 'string';
-    currentParam.value = userParam.address_group ? userParam.address_group : '';
+    currentParam.value = userParam.bank_balance ? userParam.bank_balance : '';
     currentParam.readValue = function() {
-        userParam.address_group = this.value;
+        userParam.bank_balance = this.value;
     }
     convertedParam.data.push(currentParam);
 
     currentParam = {};
-    currentParam.name = 'costcenter_group';
-    currentParam.parentObject = 'costcenter_group';
-    currentParam.title = texts.param_costcenter_group;
+    currentParam.name = 'customer_balance';
+    currentParam.title = texts.param_customer_balance;
     currentParam.type = 'string';
-    currentParam.value = userParam.costcenter_group ? userParam.costcenter_group : '';
+    currentParam.value = userParam.customer_balance ? userParam.customer_balance : '';
     currentParam.readValue = function() {
-        userParam.costcenter_group = this.value;
+        userParam.customer_balance = this.value;
+    }
+    convertedParam.data.push(currentParam);
+
+    currentParam = {};
+    currentParam.name = 'accruals_balance';
+    currentParam.title = texts.param_accruals_balance;
+    currentParam.type = 'string';
+    currentParam.value = userParam.accruals_balance ? userParam.accruals_balance : '';
+    currentParam.readValue = function() {
+        userParam.accruals_balance = this.value;
+    }
+    convertedParam.data.push(currentParam);
+
+    currentParam = {};
+    currentParam.name = 'renewalsfund_balance';
+    currentParam.title = texts.param_renewalsfund_balance;
+    currentParam.type = 'string';
+    currentParam.value = userParam.renewalsfund_balance ? userParam.renewalsfund_balance : '';
+    currentParam.readValue = function() {
+        userParam.renewalsfund_balance = this.value;
+    }
+    convertedParam.data.push(currentParam);
+
+    currentParam = {};
+    currentParam.name = 'customer_accounts';
+    currentParam.title = texts.param_customer_accounts;
+    currentParam.type = 'string';
+    currentParam.value = userParam.customer_accounts ? userParam.customer_accounts : '';
+    currentParam.readValue = function() {
+        userParam.customer_accounts = this.value;
+    }
+    convertedParam.data.push(currentParam);
+
+    currentParam = {};
+    currentParam.name = 'renewalsfund_costcenters';
+    currentParam.title = texts.param_renewalsfund_costcenters;
+    currentParam.type = 'string';
+    currentParam.value = userParam.renewalsfund_costcenters ? userParam.renewalsfund_costcenters : '';
+    currentParam.readValue = function() {
+        userParam.renewalsfund_costcenters = this.value;
     }
     convertedParam.data.push(currentParam);
 
@@ -686,9 +723,13 @@ function initUserParam(texts) {
     userParam.print_header = true;
     userParam.print_body = false;
     userParam.header = texts.header;
-    userParam.body = '';
-    userParam.address_group = 'DEB1';
-    userParam.costcenter_group = 'EJB2';
+    userParam.body = 'Auf Wunsch und nach Terminabsprache könnt Ihr bei uns Einsicht in die Details der Abschlussrechnung des Vorjahres nehmen.\nAls Vorbereitung auf die Miteigentümer-Versammlung im März überreiche ich Euch die Variante des Budgets.';
+    userParam.bank_balance = '1-1';
+    userParam.customer_balance = 'DEB';
+    userParam.accruals_balance = '290';
+    userParam.renewalsfund_balance = 'ERF';
+    userParam.customer_accounts = 'DEB1';
+    userParam.renewalsfund_costcenters = 'EJB2';
     userParam.font_family = 'Calibri';
     userParam.color_1 = '#005392';
     userParam.color_2 = '#ffffff';
@@ -893,8 +934,12 @@ function loadTexts(document, language) {
         texts.param_print_landscape = ' .... ';
         texts.param_print_header = 'Includi intestazione pagina (1=si, 0=no)';
         texts.param_print_body = 'Stampa PVR (1=si, 0=no)';
-        texts.param_address_group = 'Nome banca (solo con conto bancario, con conto postale lasciare vuoto)';
-        texts.param_costcenter_group = 'Indirizzo banca (solo con conto bancario, con conto postale lasciare vuoto)';
+        texts.param_bank_balance = '1-1';
+        texts.param_customer_balance = 'DEB';
+        texts.param_accruals_balance = '290';
+        texts.param_renewalsfund_balance = 'ERF';
+        texts.param_customer_accounts = 'Nome banca (solo con conto bancario, con conto postale lasciare vuoto)';
+        texts.param_renewalsfund_costcenters = 'Indirizzo banca (solo con conto bancario, con conto postale lasciare vuoto)';
         texts.payment_due_date_label = 'Scadenza';
         texts.payment_terms_label = 'Pagamento';
         //texts.param_max_items_per_page = 'Numero di linee su ogni fattura';
@@ -924,8 +969,12 @@ function loadTexts(document, language) {
         texts.param_print_landscape = ' .... ';
         texts.param_print_header = 'Seitenüberschrift einschliessen (1=ja, 0=nein)';
         texts.param_print_body = 'ESR ausdrucken (1=ja, 0=nein)';
-        texts.param_address_group = 'Name der Bank (nur Bankkonto, mit Postkonto leer lassen)';
-        texts.param_costcenter_group = 'Bankadresse (nur Bankkonto, mit Postkonto leer lassen)';
+        texts.param_bank_balance = '1-1';
+        texts.param_customer_balance = 'DEB';
+        texts.param_accruals_balance = '290';
+        texts.param_renewalsfund_balance = 'ERF';
+        texts.param_customer_accounts = 'Name der Bank (nur Bankkonto, mit Postkonto leer lassen)';
+        texts.param_renewalsfund_costcenters = 'Bankadresse (nur Bankkonto, mit Postkonto leer lassen)';
         texts.payment_due_date_label = 'Fälligkeitsdatum';
         texts.payment_terms_label = 'Zahlungsbedingungen';
         //texts.param_max_items_per_page = 'Anzahl der Zeilen auf jeder Rechnung';
@@ -955,8 +1004,12 @@ function loadTexts(document, language) {
         texts.param_print_landscape = ' .... ';
         texts.param_print_header = 'Inclure en-tête de page (1=oui, 0=non)';
         texts.param_print_body = 'Imprimer BVR (1=oui, 0=non)';
-        texts.param_address_group = 'Compte bancaire (seulement avec compte bancaire, avec compte postal laisser vide)';
-        texts.param_costcenter_group = 'Adresse de la banque (seulement avec compte bancaire, avec compte postal laisser vide)';
+        texts.param_bank_balance = '1-1';
+        texts.param_customer_balance = 'DEB';
+        texts.param_accruals_balance = '290';
+        texts.param_renewalsfund_balance = 'ERF';
+        texts.param_customer_accounts = 'Compte bancaire (seulement avec compte bancaire, avec compte postal laisser vide)';
+        texts.param_renewalsfund_costcenters = 'Adresse de la banque (seulement avec compte bancaire, avec compte postal laisser vide)';
         texts.payment_due_date_label = 'Echéance';
         texts.payment_terms_label = 'Paiement';
         //texts.param_max_items_per_page = 'Nombre d’éléments sur chaque facture';
@@ -986,8 +1039,12 @@ function loadTexts(document, language) {
         texts.param_print_landscape = ' .... ';
         texts.param_print_header = 'Pagina-koptekst opnemen (1=ja, 0=nee)';
         texts.param_print_body = 'Print ISR (1=yes, 0=no)';
-        texts.param_address_group = 'Bank name (only with bank account, with postal account leave blank)';
-        texts.param_costcenter_group = 'Bank address (only with bank account, with postal account leave blank)';
+        texts.param_bank_balance = '1-1';
+        texts.param_customer_balance = 'DEB';
+        texts.param_accruals_balance = '290';
+        texts.param_renewalsfund_balance = 'ERF';
+        texts.param_customer_accounts = 'Bank name (only with bank account, with postal account leave blank)';
+        texts.param_renewalsfund_costcenters = 'Bank address (only with bank account, with postal account leave blank)';
         texts.payment_due_date_label = 'Vervaldatum';
         texts.payment_terms_label = 'Betaling';
         //texts.param_max_items_per_page = 'Aantal artikelen op iedere pagina';
@@ -1017,8 +1074,12 @@ function loadTexts(document, language) {
         texts.param_print_landscape = ' .... ';
         texts.param_print_header = 'Include page header (1=yes, 0=no)';
         texts.param_print_body = 'Print ISR (1=yes, 0=no)';
-        texts.param_address_group = 'Bank name (only with bank account, with postal account leave blank)';
-        texts.param_costcenter_group = 'Bank address (only with bank account, with postal account leave blank)';
+        texts.param_bank_balance = '1-1';
+        texts.param_customer_balance = 'DEB';
+        texts.param_accruals_balance = '290';
+        texts.param_renewalsfund_balance = 'ERF';
+        texts.param_customer_accounts = 'Bank name (only with bank account, with postal account leave blank)';
+        texts.param_renewalsfund_costcenters = 'Bank address (only with bank account, with postal account leave blank)';
         texts.payment_due_date_label = 'Due date';
         texts.payment_terms_label = 'Payment';
         //texts.param_max_items_per_page = 'Number of items on each page';
