@@ -117,7 +117,7 @@ function getCalculation(document, userParam, divisor, documentInfo) {
     var rows = table.findRows(
         function(rowObj, rowNr, table) {
             // Return true if ....
-            return (rowObj.value("Gr") === userParam.bank_balance || rowObj.value("Gr") === userParam.customer_balance || rowObj.value("Gr") === userParam.renewalsfund_balance || rowObj.value("Account") === userParam.accruals_balance) && rowObj.value("Balance") != 0;
+            return (rowObj.value("Gr") === userParam.bank_balance || rowObj.value("Gr") === userParam.customer_balance || rowObj.value("Gr") === userParam.renewalsfund_costcenters || rowObj.value("Account") === userParam.accruals_balance) && rowObj.value("Balance") != 0;
         }
     );
 
