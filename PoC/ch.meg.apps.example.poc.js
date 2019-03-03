@@ -278,7 +278,6 @@ function printReport(jsonData, userParam, report) {
     // 1. HEADER
     //====================================================================//
     if (userParam.print_header) {
-
         var table = report.addTable("header_table");
         var col = table.addColumn("col1");
 
@@ -308,7 +307,7 @@ function printReport(jsonData, userParam, report) {
 
 
     //====================================================================//
-    // 3. ADDRESSES
+    // 2. ADDRESSES
     //====================================================================//
     var addressTable = report.addTable("address_table");
     var addressCol1 = addressTable.addColumn("addressCol1");
@@ -354,7 +353,7 @@ function printReport(jsonData, userParam, report) {
 
     /*
     //====================================================================//
-    // 3.1 TITLE
+    // 3 TITLE
     //====================================================================//
     var titleTable = report.addTable("title_table");
     var row = titleTable.addRow();
@@ -373,7 +372,7 @@ function printReport(jsonData, userParam, report) {
         //var docTableCol4 = report.addColumn("docTableCol4");
 
         var row = docTable.getHeader().addRow();
-        row.addCell(texts.description, "padding-left doc_table_header", 1);
+        row.addCell(texts.heading, "padding-left doc_table_header", 1);
         ////row.addCell(texts.qty, "padding-right doc_table_header amount", 1);
         ////row.addCell(texts.unit_price, "padding-right doc_table_header amount", 1);
         row.addCell("", "doc_table_header", 1)
@@ -381,6 +380,51 @@ function printReport(jsonData, userParam, report) {
         // row.addCell("", "doc_table_header_hidden", 1)
 
         //ITEMS
+        for (var i = 0; i < jsonData.items.length; i++) {
+            var item = jsonData.items[i];
+
+            var className = "item_cell";
+            if (item.item_type && item.item_type.indexOf("total") === 0) {
+                className = "subtotal_cell";
+            }
+            if (item.item_type && item.item_type.indexOf("note") === 0) {
+                className = "note_cell";
+            }
+
+            var classNameEvenRow = "";
+            if (i % 2 == 0 && item.item_type && !item.item_type.indexOf("text") === 0) {
+                classNameEvenRow = "evenRowsBackgroundColor";
+            }
+
+            var row = docTable.addRow();
+            var descriptionCell = row.addCell("", classNameEvenRow + " padding-left " + className, 2);
+            descriptionCell.addParagraph(item.description);
+            descriptionCell.addParagraph(item.description2);
+
+            if (className == "note_cell") {
+                row.addCell("", classNameEvenRow + " padding-left padding-right thin-border-top " + className, 1);
+            } else {
+                row.addCell(item.balance, classNameEvenRow + " padding-right amount " + className, 1);
+                //toInvoiceAmountFormat(jsonData, item.total_amount_vat_inclusive)
+            }
+        }
+
+        /* */
+        var docTable = report.addTable("doc_table");
+        var docTableCol1 = report.addColumn("docTableCol1");
+        var docTableCol2 = report.addColumn("docTableCol2");
+        var docTableCol3 = report.addColumn("docTableCol3");
+        //var docTableCol4 = report.addColumn("docTableCol4");
+
+        var row = docTable.getHeader().addRow();
+        row.addCell(texts.header, "padding-left doc_table_header", 1);
+        ////row.addCell(texts.qty, "padding-right doc_table_header amount", 1);
+        ////row.addCell(texts.unit_price, "padding-right doc_table_header amount", 1);
+        row.addCell("", "doc_table_header", 1)
+        row.addCell(texts.total + " " + jsonData.document_info.currency, "padding-right doc_table_header amount", 1);
+        // row.addCell("", "doc_table_header_hidden", 1)
+
+        //TRANSACTIONS
         for (var i = 0; i < jsonData.transactions.length; i++) {
             var item = jsonData.transactions[i];
 
@@ -909,46 +953,12 @@ function createStyleSheet(stylesheet, userParam) {
 /* Function that loads all the default texts used for the dialog and the report  */
 function loadTexts(document, language) {
     var texts = {};
-    if (language == 'it') {
-        texts.customer = 'No Cliente';
-        texts.date = 'Data';
-        texts.description = 'Descrizione';
-        texts.header = 'Attestato ....';
-        texts.body = '';
-        texts.page = 'Pagina';
-        texts.rounding = 'Arrotondamento';
-        texts.total = 'Totale';
-        texts.totalnet = 'Totale netto';
-        texts.vat = 'IVA';
-        texts.qty = 'Quantità';
-        texts.unit_ref = 'Unità';
-        texts.unit_price = 'Prezzo unità';
-        texts.vat_number = 'Partita IVA: ';
-        texts.bill_to = 'Indirizzo fatturazione';
-        texts.shipping_to = 'Indirizzo spedizione';
-        texts.from = 'DA';
-        texts.to = 'A';
-        texts.param_color_1 = 'Colore sfondo';
-        texts.param_color_2 = 'Colore testo';
-        texts.param_font_family = 'Tipo carattere';
-        texts.param_print_landscape = ' .... ';
-        texts.param_print_header = 'Includi intestazione pagina (1=si, 0=no)';
-        texts.param_print_body = 'Stampa PVR (1=si, 0=no)';
-        texts.param_bank_balance = '1-1';
-        texts.param_customer_balance = 'DEB';
-        texts.param_accruals_balance = '290';
-        texts.param_renewalsfund_balance = 'ERF';
-        texts.param_customer_accounts = 'Nome banca (solo con conto bancario, con conto postale lasciare vuoto)';
-        texts.param_renewalsfund_costcenters = 'Indirizzo banca (solo con conto bancario, con conto postale lasciare vuoto)';
-        texts.payment_due_date_label = 'Scadenza';
-        texts.payment_terms_label = 'Pagamento';
-        //texts.param_max_items_per_page = 'Numero di linee su ogni fattura';
-    } else if (language == 'de') {
+    if (language == 'de') {
         texts.customer = 'Kunden-Nr';
         texts.date = 'Datum';
         texts.description = 'Beschreibung';
-        texts.heading = 'Titel der ';
-        texts.header = 'Abschlussrechnung';
+        texts.heading = 'Abschlussrechnung';
+        texts.header = 'Kontostand';
         texts.body = '';
         texts.page = 'Seite';
         texts.rounding = 'Rundung';
@@ -1013,6 +1023,40 @@ function loadTexts(document, language) {
         texts.payment_due_date_label = 'Echéance';
         texts.payment_terms_label = 'Paiement';
         //texts.param_max_items_per_page = 'Nombre d’éléments sur chaque facture';
+    } else if (language == 'it') {
+        texts.customer = 'No Cliente';
+        texts.date = 'Data';
+        texts.description = 'Descrizione';
+        texts.header = 'Attestato ....';
+        texts.body = '';
+        texts.page = 'Pagina';
+        texts.rounding = 'Arrotondamento';
+        texts.total = 'Totale';
+        texts.totalnet = 'Totale netto';
+        texts.vat = 'IVA';
+        texts.qty = 'Quantità';
+        texts.unit_ref = 'Unità';
+        texts.unit_price = 'Prezzo unità';
+        texts.vat_number = 'Partita IVA: ';
+        texts.bill_to = 'Indirizzo fatturazione';
+        texts.shipping_to = 'Indirizzo spedizione';
+        texts.from = 'DA';
+        texts.to = 'A';
+        texts.param_color_1 = 'Colore sfondo';
+        texts.param_color_2 = 'Colore testo';
+        texts.param_font_family = 'Tipo carattere';
+        texts.param_print_landscape = ' .... ';
+        texts.param_print_header = 'Includi intestazione pagina (1=si, 0=no)';
+        texts.param_print_body = 'Stampa PVR (1=si, 0=no)';
+        texts.param_bank_balance = '1-1';
+        texts.param_customer_balance = 'DEB';
+        texts.param_accruals_balance = '290';
+        texts.param_renewalsfund_balance = 'ERF';
+        texts.param_customer_accounts = 'Nome banca (solo con conto bancario, con conto postale lasciare vuoto)';
+        texts.param_renewalsfund_costcenters = 'Indirizzo banca (solo con conto bancario, con conto postale lasciare vuoto)';
+        texts.payment_due_date_label = 'Scadenza';
+        texts.payment_terms_label = 'Pagamento';
+        //texts.param_max_items_per_page = 'Numero di linee su ogni fattura';
     } else if (language == 'nl') {
         texts.customer = 'Klantennummer';
         texts.date = 'Datum';
