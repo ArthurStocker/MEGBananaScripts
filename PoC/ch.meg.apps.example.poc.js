@@ -18,7 +18,6 @@ var docStart = "";
  * @param {*} inData 
  */
 function exec(inData, options) {
-
     if (!Banana.document) {
         return "@Cancel";
     }
@@ -28,10 +27,8 @@ function exec(inData, options) {
     if (!lang) {
         lang = "en";
     }
-
     texts = loadTexts(document, lang);
     var userParam = initUserParam(texts);
-
     // Retrieve saved param
     var savedParam = document.getScriptSettings();
     if (savedParam && savedParam.length > 0) {
@@ -40,7 +37,7 @@ function exec(inData, options) {
 
     // If needed show the settings dialog to the user
     if (!options || !options.useLastSettings) {
-        // userParam = settingsDialog(); // From properties
+        userParam = settingsDialog(); // From properties
     }
 
     if (!userParam) {
@@ -365,6 +362,7 @@ function printReport(jsonData, userParam, report) {
     // 4. TABLE ITEMS/DOCUMENT
     //====================================================================//
     if (!userParam.print_body) {
+        if (userParam.print_close) {
         var docTable = report.addTable("doc_table");
         var docTableCol1 = report.addColumn("docTableCol1");
         var docTableCol2 = report.addColumn("docTableCol2");
@@ -408,7 +406,7 @@ function printReport(jsonData, userParam, report) {
                 //toInvoiceAmountFormat(jsonData, item.total_amount_vat_inclusive)
             }
         }
-
+        } else {
         /* */
         var docTable = report.addTable("doc_table");
         var docTableCol1 = report.addColumn("docTableCol1");
@@ -452,6 +450,7 @@ function printReport(jsonData, userParam, report) {
                 row.addCell(item.balance, classNameEvenRow + " padding-right amount " + className, 1);
                 //toInvoiceAmountFormat(jsonData, item.total_amount_vat_inclusive)
             }
+        }
         }
     }
 
@@ -628,12 +627,23 @@ function convertParam(userParam) {
     }
     convertedParam.data.push(currentParam);
 
+    currentParam = {};
     currentParam.name = 'print_header';
     currentParam.title = texts.param_print_header;
     currentParam.type = 'bool';
     currentParam.value = userParam.print_header ? true : false;
     currentParam.readValue = function() {
         userParam.print_header = this.value;
+    }
+    convertedParam.data.push(currentParam);
+
+    currentParam = {};
+    currentParam.name = 'print_close';
+    currentParam.title = texts.param_print_close;
+    currentParam.type = 'bool';
+    currentParam.value = userParam.print_close ? true : false;
+    currentParam.readValue = function() {
+        userParam.print_close = this.value;
     }
     convertedParam.data.push(currentParam);
 
@@ -765,15 +775,16 @@ function initUserParam(texts) {
     var userParam = {};
     userParam.print_landscape = false;
     userParam.print_header = true;
+    userParam.print_close = false;
     userParam.print_body = false;
     userParam.header = texts.header;
-    userParam.body = 'Auf Wunsch und nach Terminabsprache könnt Ihr bei uns Einsicht in die Details der Abschlussrechnung des Vorjahres nehmen.\nAls Vorbereitung auf die Miteigentümer-Versammlung im März überreiche ich Euch die Variante des Budgets.';
+    userParam.body = 'Als Vorbereitung auf die Miteigentümer-Versammlung im März überreiche ich Euch die Variante des Budgets.\nAuf Wunsch und nach Terminabsprache könnt Ihr bei uns Einsicht in die Details der Abschlussrechnung des Vorjahres nehmen.';
     userParam.bank_balance = '1-1';
-    userParam.customer_balance = 'DEB';
-    userParam.accruals_balance = '290';
-    userParam.renewalsfund_balance = 'ERF';
-    userParam.customer_accounts = 'DEB1';
-    userParam.renewalsfund_costcenters = 'EJB2';
+    userParam.customer_balance = '1100';
+    userParam.accruals_balance = '2330';
+    userParam.renewalsfund_balance = '2480';
+    userParam.customer_accounts = '990100';
+    userParam.renewalsfund_costcenters = 'EBJ';
     userParam.font_family = 'Calibri';
     userParam.color_1 = '#005392';
     userParam.color_2 = '#ffffff';
@@ -817,12 +828,12 @@ function settingsDialog() {
         lang = "en";
     }
     texts = loadTexts(document, lang);
-    var scriptform = initUserParam();
+    var scriptform = initUserParam(texts);
 
     // Retrieve saved param
     var savedParam = document.getScriptSettings();
     if (savedParam && savedParam.length > 0) {
-        scriptform = JSON.parse(savedParam);
+        //scriptform = JSON.parse(savedParam);
     }
 
     scriptform = parametersDialog(scriptform); // From propertiess
@@ -905,7 +916,7 @@ function createStyleSheet(stylesheet, userParam) {
     //====================================================================//
     var beginStyle = stylesheet.addStyle(".body");
     beginStyle.setAttribute("position", "absolute");
-    beginStyle.setAttribute("top", "90mm");
+    beginStyle.setAttribute("top", "130mm");
     beginStyle.setAttribute("left", "20mm");
     beginStyle.setAttribute("right", "10mm");
     beginStyle.setAttribute("font-size", "10px");
@@ -978,11 +989,12 @@ function loadTexts(document, language) {
         texts.param_font_family = 'Typ Schriftzeichen';
         texts.param_print_landscape = ' .... ';
         texts.param_print_header = 'Seitenüberschrift einschliessen (1=ja, 0=nein)';
-        texts.param_print_body = 'ESR ausdrucken (1=ja, 0=nein)';
+        texts.param_print_close = ' .... P1 ';
+        texts.param_print_body = 'Text ausdrucken (1=ja, 0=nein)';
         texts.param_bank_balance = '1-1';
-        texts.param_customer_balance = 'DEB';
-        texts.param_accruals_balance = '290';
-        texts.param_renewalsfund_balance = 'ERF';
+        texts.param_customer_balance = '990100';
+        texts.param_accruals_balance = '2330';
+        texts.param_renewalsfund_balance = '2480';
         texts.param_customer_accounts = 'Name der Bank (nur Bankkonto, mit Postkonto leer lassen)';
         texts.param_renewalsfund_costcenters = 'Bankadresse (nur Bankkonto, mit Postkonto leer lassen)';
         texts.payment_due_date_label = 'Fälligkeitsdatum';
@@ -1013,7 +1025,8 @@ function loadTexts(document, language) {
         texts.param_font_family = 'Police de caractère';
         texts.param_print_landscape = ' .... ';
         texts.param_print_header = 'Inclure en-tête de page (1=oui, 0=non)';
-        texts.param_print_body = 'Imprimer BVR (1=oui, 0=non)';
+        texts.param_print_close = ' .... ';
+        texts.param_print_body = 'Imprimer ... (1=oui, 0=non)';
         texts.param_bank_balance = '1-1';
         texts.param_customer_balance = 'DEB';
         texts.param_accruals_balance = '290';
@@ -1047,7 +1060,8 @@ function loadTexts(document, language) {
         texts.param_font_family = 'Tipo carattere';
         texts.param_print_landscape = ' .... ';
         texts.param_print_header = 'Includi intestazione pagina (1=si, 0=no)';
-        texts.param_print_body = 'Stampa PVR (1=si, 0=no)';
+        texts.param_print_close = ' .... ';
+        texts.param_print_body = 'Stampa ... (1=si, 0=no)';
         texts.param_bank_balance = '1-1';
         texts.param_customer_balance = 'DEB';
         texts.param_accruals_balance = '290';
@@ -1082,7 +1096,8 @@ function loadTexts(document, language) {
         texts.param_font_family = 'Lettertype';
         texts.param_print_landscape = ' .... ';
         texts.param_print_header = 'Pagina-koptekst opnemen (1=ja, 0=nee)';
-        texts.param_print_body = 'Print ISR (1=yes, 0=no)';
+        texts.param_print_close = ' .... ';
+        texts.param_print_body = 'Print ... (1=yes, 0=no)';
         texts.param_bank_balance = '1-1';
         texts.param_customer_balance = 'DEB';
         texts.param_accruals_balance = '290';
@@ -1117,7 +1132,8 @@ function loadTexts(document, language) {
         texts.param_font_family = 'Font type';
         texts.param_print_landscape = ' .... ';
         texts.param_print_header = 'Include page header (1=yes, 0=no)';
-        texts.param_print_body = 'Print ISR (1=yes, 0=no)';
+        texts.param_print_close = ' .... ';
+        texts.param_print_body = 'Print body (1=yes, 0=no)';
         texts.param_bank_balance = '1-1';
         texts.param_customer_balance = 'DEB';
         texts.param_accruals_balance = '290';
